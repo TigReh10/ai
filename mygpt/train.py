@@ -5,9 +5,11 @@ in data/input.txt. The model starts knowing NOTHING and learns purely from your
 text — you are training your own neural network.
 
 Run (from inside the mygpt/ folder):
+    python get_data.py     # (optional) download a big dataset first
     python train.py
 
-Tip: the more (and cleaner) text in data/input.txt, the better it learns.
+The model is saved to checkpoints/ periodically AND if you press Ctrl+C, so you
+can stop any time and still use generate.py.
 """
 from __future__ import annotations
 
@@ -22,7 +24,7 @@ from model import GPT
 batch_size = 32        # sequences processed in parallel
 block_size = 128       # how many characters of context
 max_iters = 3000       # training steps
-eval_interval = 250    # how often to print the loss
+eval_interval = 250    # how often to print the loss / save
 learning_rate = 3e-4
 eval_iters = 100
 n_embd = 128           # size of the model's "thinking" vectors
@@ -82,22 +84,8 @@ def estimate_loss(model):
     return out
 
 
-def main():
-    model = GPT(vocab_size, n_embd, n_head, n_layer, block_size, dropout).to(device)
-    n_params = sum(p.numel() for p in model.parameters())
-    print(f"Training on {device}. Vocab size: {vocab_size}. Parameters: {n_params/1e6:.2f}M")
-
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    for it in range(max_iters + 1):
-        if it % eval_interval == 0:
-            losses = estimate_loss(model)
-            print(f"step {it:>5}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
-        xb, yb = get_batch("train")
-        _, loss = model(xb, yb)
-        optimizer.zero_grad(set_to_none=True)
-        loss.backward()
-        optimizer.step()
-
+def save_checkpoint(model):
+    """Save the model weights and the vocabulary so generate.py can load it."""
     os.makedirs("checkpoints", exist_ok=True)
     torch.save(model.state_dict(), os.path.join("checkpoints", "model.pt"))
     meta = {
@@ -114,9 +102,33 @@ def main():
     }
     with open(os.path.join("checkpoints", "vocab.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f)
+
+
+def main():
+    model = GPT(vocab_size, n_embd, n_head, n_layer, block_size, dropout).to(device)
+    n_params = sum(p.numel() for p in model.parameters())
+    print(f"Training on {device}. Vocab size: {vocab_size}. Parameters: {n_params/1e6:.2f}M")
+    print("Tip: you can press Ctrl+C any time — progress is saved automatically.\n")
+
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    try:
+        for it in range(max_iters + 1):
+            if it % eval_interval == 0:
+                losses = estimate_loss(model)
+                print(f"step {it:>5}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}  (saved)")
+                save_checkpoint(model)
+            xb, yb = get_batch("train")
+            _, loss = model(xb, yb)
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            optimizer.step()
+    except KeyboardInterrupt:
+        print("\nInterrupted — saving what we have so far...")
+
+    save_checkpoint(model)
     print("\nSaved your trained model to checkpoints/model.pt")
 
-    print("\n--- A sample from your freshly trained AI ---")
+    print("\n--- A sample from your trained AI ---")
     context = torch.zeros((1, 1), dtype=torch.long, device=device)
     print(decode(model.generate(context, max_new_tokens=400)[0].tolist()))
 
