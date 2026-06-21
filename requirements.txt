@@ -1,9 +1,0 @@
-transformers>=4.44.0
-torch>=2.2.0
-accelerate>=0.33.0
-ddgs>=6.0.0
-requests>=2.31.0
-beautifulsoup4>=4.12.0
-flask>=3.0.0
-python-dotenv>=1.0.0
-pypdf>=4.0.0
