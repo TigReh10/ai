@@ -1,0 +1,30 @@
+This is your AI's training text. The model below learns ONLY from what is written here.
+
+Replace this file with your own, larger text for better results: your notes, your
+favourite book, song lyrics, code, stories — anything. The more text (aim for at
+least 100 KB, the more the merrier), the more your AI will learn to write in that style.
+
+Here is a little starter story so training works right away:
+
+Once upon a time, in a small town between the hills and the sea, there lived a curious
+young inventor named Mira. Every morning she would wake before the sun and tinker in her
+workshop, building little machines out of gears and wire and dreams. The townspeople
+laughed at her strange contraptions, but Mira did not mind, for she believed that every
+great idea begins as a small and silly spark.
+
+One autumn evening, Mira built a tiny brass bird that could flap its wings. It was not
+perfect; it wobbled and creaked and sometimes fell from the sky. But each day she fixed
+it, and each day it flew a little higher. "Learning," she whispered to the bird, "is just
+failing again and again until failing becomes flying."
+
+Word of the little bird spread across the town. Children came to watch it loop above the
+rooftops. Old sailors smiled and remembered their own forgotten dreams. And slowly, the
+same people who had laughed began to build things of their own: kites and clocks and
+whirling wooden toys.
+
+Mira learned that an idea, once shared, does not shrink; it multiplies. She learned that
+patience is a kind of magic, and that the smallest machine, made with care, can change
+the way a whole town sees the sky.
+
+And so, year after year, the inventor kept building, kept failing, and kept flying — not
+because it was easy, but because it was hers.
