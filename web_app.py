@@ -1,4 +1,4 @@
-"""Minimal web chat UI for SmartAI (Flask).
+"""Minimal web chat UI for SmartAI (local LLM + web search + your own data).
 
 Usage:
     python web_app.py
@@ -10,10 +10,16 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
 from agent import SmartAI
+from knowledge import KnowledgeBase
 
 load_dotenv()
+
+kb = KnowledgeBase()
+_count = kb.load()
+print(f"Loaded {_count} passages from data/." if _count else "No personal data in data/ yet.")
+
 app = Flask(__name__)
-ai = SmartAI()
+ai = SmartAI(knowledge=kb)
 
 
 @app.route("/")

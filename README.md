@@ -1,39 +1,41 @@
-# SmartAI 🧠🔍
+# SmartAI 🧠🔍📚
 
 A **self-hosted** AI assistant that runs its **own local LLM** — no external API,
-no API key, no per-message cost. The model lives on *your* machine.
+no API key, no per-message cost — and that you can **teach with your own data**.
 
-SmartAI is also **agentic**: it reasons about your question and, when it needs
-fresh or factual information, it **searches the live web and reads pages on its
-own** before answering — then cites its sources.
+SmartAI is built to be as smart as a local model can be:
 
-## Why this is different
+1. 🤖 **Its own LLM** — an open-source instruct model that runs entirely on your
+   machine (no OpenAI, no keys).
+2. 🔍 **Live web search** — searches DuckDuckGo and reads pages for fresh facts.
+3. 📚 **Your own knowledge base (RAG)** — feed it your notes/PDFs and it answers
+   from *your* material, citing the file.
+4. 🧩 **Self-critique** — it reviews and improves its own draft before replying.
 
-- 🤖 **Its own LLM** — uses an open-source instruct model (Qwen / Llama, etc.)
-  downloaded from Hugging Face and run **entirely locally**. No OpenAI, no keys.
-- 🔍 **Live web search** via DuckDuckGo (free, no API key).
-- 📄 **Page reading** — fetches and extracts readable text from any URL.
-- 🔁 **ReAct loop** — the model plans, searches, reads, then answers with sources.
-- 💬 **Two interfaces** — a command-line chat and a clean web UI.
+> Honest note: a model that runs free on your laptop is far smaller than
+> ChatGPT/GPT-4 and won't beat it in general. But by grounding answers in the
+> **live web** and **your own documents**, SmartAI can be *more useful than
+> ChatGPT on your specific topics* — because it has read things ChatGPT never has.
+
+## Feed your AI your own data 📚
+
+1. Put files in the `data/` folder (`.txt`, `.md`, `.csv`, or `.pdf`).
+2. Run SmartAI — it indexes them on startup.
+3. Ask away. It finds the most relevant passages and answers from them, naming
+   the source file.
+
+That's Retrieval-Augmented Generation (RAG): the model stays the same, but its
+*knowledge* grows with whatever you give it.
 
 ## How it works
 
 ```
 You ─► Local LLM (on your machine) ─► decides what to do next
-                 │
+                 ├► KB: query       ─► your own documents
                  ├► SEARCH: query   ─► live web results
                  ├► READ: url       ─► page text
-                 └► ANSWER: ...      ─► grounded answer with sources
+                 └► ANSWER: ...      ─► then self-reviews → final answer
 ```
-
-## Requirements
-
-- Python 3.9+
-- ~3–6 GB free disk for model weights (depends on the model you pick)
-- A reasonably modern CPU works; a GPU makes it much faster
-
-> Tip: start with the small default model. If you have a GPU or lots of RAM,
-> switch to a bigger model in `.env` for smarter answers.
 
 ## Setup
 
@@ -43,38 +45,20 @@ cd ai
 pip install -r requirements.txt
 ```
 
-(Optional) choose a model — the default works out of the box:
+(Optional) pick a model in `.env` — the default works out of the box:
 
 ```bash
-cp .env.example .env   # then edit AI_MODEL if you want a different one
+cp .env.example .env
 ```
 
-The first run downloads the model weights automatically. After that it runs
-offline (web search aside).
+The first run downloads the model weights automatically.
 
 ## Usage
 
-### Command line
-
 ```bash
-python cli.py
+python cli.py        # command-line chat
+python web_app.py    # web UI at http://localhost:5000
 ```
-
-```
-You: who won the latest F1 race?
-  [web_search] latest F1 race winner
-  [read_url] https://...
-
-SmartAI: ... (a fresh, sourced answer)
-```
-
-### Web app
-
-```bash
-python web_app.py
-```
-
-Then open <http://localhost:5000>.
 
 ## Choosing a model (`.env`)
 
@@ -82,28 +66,20 @@ Then open <http://localhost:5000>.
 |-------|------|-------|
 | `Qwen/Qwen2.5-0.5B-Instruct` | tiny | Runs on almost any laptop |
 | `Qwen/Qwen2.5-1.5B-Instruct` | small | **Default** — good balance |
-| `meta-llama/Llama-3.2-1B-Instruct` | small | Needs HF access approval |
 | `Qwen/Qwen2.5-3B-Instruct` | medium | Smarter; wants more RAM / a GPU |
+| `Qwen/Qwen2.5-7B-Instruct` | large | Much smarter; needs a strong GPU |
 
 ## Project structure
 
 | File | Purpose |
 |------|---------|
-| `agent.py` | Loads the local LLM + the reasoning / tool loop |
+| `agent.py` | Local LLM + reasoning loop + self-critique |
+| `knowledge.py` | Your personal knowledge base (RAG over `data/`) |
 | `tools.py` | `web_search` and `read_url` web tools |
 | `cli.py` | Command-line chat |
 | `web_app.py` | Flask web chat server |
 | `templates/index.html` | Web chat UI |
-| `requirements.txt` | Python dependencies |
-| `.env.example` | Optional model configuration |
-
-## Notes
-
-- Smaller local models are not as sharp as giant cloud models, but they are
-  **fully yours, private, and free to run**. Pick a bigger model for more skill.
-- Want zero Python setup? You can also run a local model with
-  [Ollama](https://ollama.com) and point an OpenAI-compatible client at it —
-  but this project keeps everything in pure Python so it truly is its own LLM.
+| `data/` | Drop your own files here to teach the AI |
 
 ---
 

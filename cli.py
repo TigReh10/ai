@@ -1,4 +1,4 @@
-"""Command-line chat with SmartAI.
+"""Command-line chat with SmartAI (local LLM + web search + your own data).
 
 Usage:
     python cli.py
@@ -8,11 +8,20 @@ from __future__ import annotations
 from dotenv import load_dotenv
 
 from agent import SmartAI
+from knowledge import KnowledgeBase
 
 
 def main() -> None:
     load_dotenv()
-    ai = SmartAI()
+
+    kb = KnowledgeBase()
+    count = kb.load()
+    if count:
+        print(f"Loaded {count} passages from your data/ folder.\n")
+    else:
+        print("No personal data yet — add .txt/.md/.pdf files to data/ to teach SmartAI.\n")
+
+    ai = SmartAI(knowledge=kb)
     print("SmartAI is ready. Web search is ON. Type 'exit' to quit.\n")
     while True:
         try:
