@@ -1,15 +1,15 @@
-"""Train YOUR OWN AI from scratch.
+"""Train YOUR OWN AI from scratch — now scalable.
 
-This trains the character-level GPT defined in model.py on whatever text you put
-in data/input.txt. The model starts knowing NOTHING and learns purely from your
-text — you are training your own neural network.
+This trains the character-level GPT defined in model.py on data/input.txt.
+The model starts knowing NOTHING and learns purely from your text.
 
-Run (from inside the mygpt/ folder):
-    python get_data.py     # (optional) download a big dataset first
-    python train.py
+MAKE IT SMARTER: pick a bigger size with the MODEL_SIZE env var.
+    MODEL_SIZE=small  python train.py    # default, fine on a CPU
+    MODEL_SIZE=medium python train.py    # better; slow on CPU, fast on GPU
+    MODEL_SIZE=large  python train.py    # needs a GPU
+    MODEL_SIZE=xl     python train.py    # needs a strong GPU
 
-The model is saved to checkpoints/ periodically AND if you press Ctrl+C, so you
-can stop any time and still use generate.py.
+Progress is saved to checkpoints/ periodically AND on Ctrl+C.
 """
 from __future__ import annotations
 
@@ -20,18 +20,28 @@ import torch
 
 from model import GPT
 
-# ---- hyperparameters (try changing these!) ----
-batch_size = 32        # sequences processed in parallel
-block_size = 128       # how many characters of context
-max_iters = 3000       # training steps
-eval_interval = 250    # how often to print the loss / save
+# ---- model size presets (bigger = smarter, but slower & needs more memory) ----
+PRESETS = {
+    "small":  dict(n_embd=128, n_head=4, n_layer=4, block_size=128, max_iters=3000,  batch_size=32),
+    "medium": dict(n_embd=256, n_head=8, n_layer=6, block_size=256, max_iters=6000,  batch_size=48),
+    "large":  dict(n_embd=384, n_head=6, n_layer=6, block_size=256, max_iters=8000,  batch_size=64),
+    "xl":     dict(n_embd=512, n_head=8, n_layer=8, block_size=512, max_iters=12000, batch_size=64),
+}
+MODEL_SIZE = os.environ.get("MODEL_SIZE", "small").lower()
+cfg = PRESETS.get(MODEL_SIZE, PRESETS["small"])
+
+batch_size = cfg["batch_size"]
+block_size = cfg["block_size"]
+max_iters = cfg["max_iters"]
+n_embd = cfg["n_embd"]
+n_head = cfg["n_head"]
+n_layer = cfg["n_layer"]
+
+eval_interval = 250
 learning_rate = 3e-4
 eval_iters = 100
-n_embd = 128           # size of the model's "thinking" vectors
-n_head = 4             # attention heads
-n_layer = 4            # transformer blocks (depth)
 dropout = 0.1
-# -----------------------------------------------
+# -------------------------------------------------------------------------------
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 torch.manual_seed(1337)
@@ -40,7 +50,6 @@ DATA_PATH = os.path.join("data", "input.txt")
 with open(DATA_PATH, "r", encoding="utf-8") as f:
     text = f.read()
 
-# Build the vocabulary from the unique characters in your text.
 chars = sorted(list(set(text)))
 vocab_size = len(chars)
 stoi = {ch: i for i, ch in enumerate(chars)}
@@ -85,7 +94,6 @@ def estimate_loss(model):
 
 
 def save_checkpoint(model):
-    """Save the model weights and the vocabulary so generate.py can load it."""
     os.makedirs("checkpoints", exist_ok=True)
     torch.save(model.state_dict(), os.path.join("checkpoints", "model.pt"))
     meta = {
@@ -107,7 +115,7 @@ def save_checkpoint(model):
 def main():
     model = GPT(vocab_size, n_embd, n_head, n_layer, block_size, dropout).to(device)
     n_params = sum(p.numel() for p in model.parameters())
-    print(f"Training on {device}. Vocab size: {vocab_size}. Parameters: {n_params/1e6:.2f}M")
+    print(f"Size preset: {MODEL_SIZE}. Training on {device}. Vocab: {vocab_size}. Parameters: {n_params/1e6:.2f}M")
     print("Tip: you can press Ctrl+C any time — progress is saved automatically.\n")
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
